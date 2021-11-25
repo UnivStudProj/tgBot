@@ -1,0 +1,35 @@
+2021-11-23 23:48:20,355 - root - INFO - 
+2021-11-24 01:23:57,118 - root - INFO - 
+2021-11-24 01:26:04,613 - root - INFO - m
+2021-11-24 01:27:26,063 - root - INFO - 
+2021-11-24 01:28:34,980 - root - INFO - .webm
+2021-11-24 01:29:04,934 - root - INFO - 109
+2021-11-24 01:39:11,839 - root - INFO - mbeRick Astley - Never Gonna Give You Up (Official Music Video).mp3
+2021-11-24 01:44:18,832 - root - INFO - mbe
+2021-11-24 01:44:47,157 - root - INFO - C:\Users\gerku\PycharmProjects\pythonshitProject\Rick Astley - Never Gonna Give You Up (Official Music Video).webm
+2021-11-24 01:46:14,821 - root - INFO - C:\Users\gerku\PycharmProjects\pythonshitProject\Rick Astley - Never Gonna Give You Up (Official Music Video)
+2021-11-24 01:50:07,943 - root - INFO - C:\Users\gerku\PycharmProjects\pythonshitProject\Rick Astley - Never Gonna Give You Up (Official Music Video)
+2021-11-24 01:55:59,983 - root - INFO - C:\Users\gerku\PycharmProjects\pythonshitProject\Rick Astley - Never Gonna Give You Up (Official Music Video).webm
+2021-11-24 01:55:59,984 - root - INFO - C:\Users\gerku\PycharmProjects\pythonshitProject\Rick Astley - Never Gonna Give You Up (Official Music Video).mp3
+2021-11-24 20:19:46,184 - root - INFO - What to donwload?
+2021-11-24 20:20:54,929 - root - INFO - {'id': '9094072059426257101', 'from_user': {'id': 2117378651, 'is_bot': False, 'first_name': '\u30de\u30b8', 'username': None, 'last_name': '\u30e4\u30d0\u30a4', 'language_code': 'en', 'can_join_groups': None, 'can_read_all_group_messages': None, 'supports_inline_queries': None}, 'message': {'content_type': 'text', 'id': 793, 'message_id': 793, 'from_user': <telebot.types.User object at 0x00000159DEDF8EE0>, 'date': 1637774450, 'chat': <telebot.types.Chat object at 0x00000159DEDF8BE0>, 'sender_chat': None, 'forward_from': None, 'forward_from_chat': None, 'forward_from_message_id': None, 'forward_signature': None, 'forward_sender_name': None, 'forward_date': None, 'reply_to_message': None, 'via_bot': None, 'edit_date': None, 'media_group_id': None, 'author_signature': None, 'text': 'What to donwload?', 'entities': None, 'caption_entities': None, 'audio': None, 'document': None, 'photo': None, 'sticker': None, 'video': None, 'video_note': None, 'voice': None, 'caption': None, 'contact': None, 'location': None, 'venue': None, 'animation': None, 'dice': None, 'new_chat_member': None, 'new_chat_members': None, 'left_chat_member': None, 'new_chat_title': None, 'new_chat_photo': None, 'delete_chat_photo': None, 'group_chat_created': None, 'supergroup_chat_created': None, 'channel_chat_created': None, 'migrate_to_chat_id': None, 'migrate_from_chat_id': None, 'pinned_message': None, 'invoice': None, 'successful_payment': None, 'connected_website': None, 'reply_markup': <telebot.types.InlineKeyboardMarkup object at 0x00000159DEDF8A90>, 'json': {'message_id': 793, 'from': {'id': 2109248970, 'is_bot': True, 'first_name': 'test bot', 'username': 'Test402Bot'}, 'chat': {'id': 2117378651, 'first_name': '\u30de\u30b8', 'last_name': '\u30e4\u30d0\u30a4', 'type': 'private'}, 'date': 1637774450, 'text': 'What to donwload?', 'reply_markup': {'inline_keyboard': [[{'text': 'audio', 'callback_data': 'audio'}, {'text': 'video', 'callback_data': 'video'}]]}}}, 'inline_message_id': None, 'chat_instance': '5719318351708564704', 'data': 'audio', 'game_short_name': None}
+2021-11-24 20:29:22,794 - TeleBot - ERROR - A request to the Telegram API was unsuccessful. Error code: 400. Description: Bad Request: query is too old and response timeout expired or query ID is invalid
+2021-11-24 20:57:51,048 - TeleBot - ERROR - A request to the Telegram API was unsuccessful. Error code: 400. Description: Bad Request: failed to get HTTP URL content
+2021-11-24 20:58:22,902 - TeleBot - ERROR - A request to the Telegram API was unsuccessful. Error code: 400. Description: Bad Request: wrong file identifier/HTTP URL specified
+2021-11-24 20:59:58,191 - root - INFO - 
+2021-11-24 20:59:58,398 - TeleBot - ERROR - A request to the Telegram API was unsuccessful. Error code: 400. Description: Bad Request: wrong file identifier/HTTP URL specified
+2021-11-24 21:00:08,915 - root - INFO - W4VTq0sa9yg
+2021-11-24 21:00:08,991 - TeleBot - ERROR - A request to the Telegram API was unsuccessful. Error code: 400. Description: Bad Request: wrong file identifier/HTTP URL specified
+2021-11-24 21:02:31,406 - root - INFO - W4VTq0sa9yg
+2021-11-24 21:04:10,694 - TeleBot - ERROR - A request to the Telegram API was unsuccessful. Error code: 409. Description: Conflict: terminated by setWebhook request
+2021-11-24 21:15:31,836 - TeleBot - ERROR - A request to the Telegram API was unsuccessful. Error code: 400. Description: Bad Request: query is too old and response timeout expired or query ID is invalid
+2021-11-24 21:26:59,341 - TeleBot - ERROR - A request to the Telegram API was unsuccessful. Error code: 400. Description: Bad Request: query is too old and response timeout expired or query ID is invalid
+2021-11-24 21:32:51,983 - TeleBot - ERROR - A request to the Telegram API was unsuccessful. Error code: 400. Description: Bad Request: query is too old and response timeout expired or query ID is invalid
+2021-11-24 21:36:00,642 - TeleBot - ERROR - A request to the Telegram API was unsuccessful. Error code: 400. Description: Bad Request: query is too old and response timeout expired or query ID is invalid
+2021-11-24 21:41:44,443 - TeleBot - ERROR - A request to the Telegram API was unsuccessful. Error code: 400. Description: Bad Request: query is too old and response timeout expired or query ID is invalid
+2021-11-24 21:47:33,760 - TeleBot - ERROR - A request to the Telegram API was unsuccessful. Error code: 400. Description: Bad Request: query is too old and response timeout expired or query ID is invalid
+2021-11-24 22:23:18,799 - TeleBot - ERROR - A request to the Telegram API was unsuccessful. Error code: 400. Description: Bad Request: query is too old and response timeout expired or query ID is invalid
+2021-11-24 22:24:40,634 - TeleBot - ERROR - A request to the Telegram API was unsuccessful. Error code: 400. Description: Bad Request: query is too old and response timeout expired or query ID is invalid
+2021-11-24 22:28:57,514 - TeleBot - ERROR - A request to the Telegram API was unsuccessful. Error code: 400. Description: Bad Request: query is too old and response timeout expired or query ID is invalid
+2021-11-24 23:19:50,284 - root - INFO - mp4
+2021-11-25 20:37:07,578 - root - INFO - mp4

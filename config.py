@@ -1,0 +1,5 @@
+host = "127.0.0.1"
+user = "postgres"
+password = "123"
+db_name = "bank_database"
+tg_api_key = "2109248970:AAGTBjA4tTYIZDqX4cpirBi0tQ-bh8iXVqk"
