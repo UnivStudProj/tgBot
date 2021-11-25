@@ -67,22 +67,15 @@ def call_answer(call):
             os.remove(audio_name)
         elif call.data == "video":
             video = pafy.new(usr_lnk)
-            video_type = mp4_availability(video.streams)
-            best_video = video.getbest(preftype=video_type)
             bot.answer_callback_query(callback_query_id=call.id) # Letting Telegram understand that button event is handled 
+            best_video, best_audio = find_best_vid(video)
             bot.send_message(call.message.chat.id, "Downloading the video ({})".format(best_video.resolution))
-            best_video.download()
-            if video_type == 'any':
-                bot.send_message(call.message.chat.id, "Converting the video...")
-                video_name = convert_to_mp4(video.title, '.' + best_video.extension)
-            else:
-                video_name = video.title + '.' + best_video.extension
-            video_name = video.title + '.' + best_video.extension
+            video_name = merge(best_video, best_audio)
             bot.send_video(call.message.chat.id, open(video_name, 'rb'))
             os.remove(video_name)
         dl_per = 0   
     except ValueError:
-        bot.send_message(call.message.chat.id, "dNeed 11 character video id or the URL of the video.")
+        bot.send_message(call.message.chat.id, "Need 11 character video id or the URL of the video.")
     
 
 # Handling text messages
@@ -92,29 +85,42 @@ def get_text_messages(message):
     # Verifying a link
     if dl_per == 1 and not message.text.startswith("https://www.youtube.com/watch?v="):
         return bot.send_message(message.chat.id, "Got incorrect link, please write a valid link")
+
+ 
+# Checking best video
+def find_best_vid(video):
+    for v in video.videostreams:
+        best_video = v
+        if int(str(v)[str(v).index('x') + 1:]) > 1080: break 
+        
+    best_audio = video.getbestaudio()    
+    return best_video, best_audio
+
+
+def merge(best_video, best_audio):
+    best_video.download()
+    best_audio.download()
+    
+    v_title = best_video.title
+    v_ext = best_video.extension
+    vid = v_title + '.' + v_ext
+    vid_path = os.path.abspath(vid)
+    
+    a_title = v_title
+    a_ext = best_audio.extension
+    aud = a_title + '.' + a_ext
+    aud_path = os.path.abspath(aud)
+    subprocess.call(['ffmpeg', '-i', vid_path, '-i', aud_path, vid_path[:vid_path.index('.')] + '.mp4'])
+    os.remove(vid)
+    os.remove(aud)
+    return v_title + '.mp4'
   
-
-# Checking if there mp4
-def mp4_availability(streams):
-    for s in streams:
-        if s.extension == 'mp4': return s.extension
-    return 'any'
-
   
 # Checking if there mp3
 def mp3_availability(audiostreams):
     for a in audiostreams:
         if a.extension == 'mp3': return a.extension
     return 'any'
-        
-        
-# Converting downloaded video to mp4
-def convert_to_mp4(file_name, file_extension):
-    whole_file = file_name + file_extension
-    file_path = os.path.abspath(whole_file) # Setting a path of file
-    subprocess.call(['ffmpeg', '-i', file_path, '-hide_banner', file_path[:file_path.index('.')] + '.mp4']) # Converting by using ffmpeg
-    os.remove(whole_file)
-    return file_name + '.mp4'
 
 
 # Converting downloaded audio to mp3
