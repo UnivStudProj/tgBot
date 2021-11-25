@@ -1,4 +1,4 @@
-import telebot, pafy, os, subprocess, logging, requests
+import telebot, pafy, os, subprocess, logging
 from config import tg_api_key
 from telebot import custom_filters
 from telebot import types
@@ -67,10 +67,16 @@ def call_answer(call):
             os.remove(audio_name)
         elif call.data == "video":
             video = pafy.new(usr_lnk)
-            best_video = video.getbest(preftype='mp4')
+            video_type = mp4_availability(video.streams)
+            best_video = video.getbest(preftype=video_type)
             bot.answer_callback_query(callback_query_id=call.id) # Letting Telegram understand that button event is handled 
             bot.send_message(call.message.chat.id, "Downloading the video ({})".format(best_video.resolution))
             best_video.download()
+            if video_type == 'any':
+                bot.send_message(call.message.chat.id, "Converting the video...")
+                video_name = convert_to_mp4(video.title, '.' + best_video.extension)
+            else:
+                video_name = video.title + '.' + best_video.extension
             video_name = video.title + '.' + best_video.extension
             bot.send_video(call.message.chat.id, open(video_name, 'rb'))
             os.remove(video_name)
@@ -87,6 +93,13 @@ def get_text_messages(message):
     if dl_per == 1 and not message.text.startswith("https://www.youtube.com/watch?v="):
         return bot.send_message(message.chat.id, "Got incorrect link, please write a valid link")
   
+
+# Checking if there mp4
+def mp4_availability(streams):
+    for s in streams:
+        if s.extension == 'mp4': return s.extension
+    return 'any'
+
   
 # Checking if there mp3
 def mp3_availability(audiostreams):
@@ -94,8 +107,17 @@ def mp3_availability(audiostreams):
         if a.extension == 'mp3': return a.extension
     return 'any'
         
+        
+# Converting downloaded video to mp4
+def convert_to_mp4(file_name, file_extension):
+    whole_file = file_name + file_extension
+    file_path = os.path.abspath(whole_file) # Setting a path of file
+    subprocess.call(['ffmpeg', '-i', file_path, '-hide_banner', file_path[:file_path.index('.')] + '.mp4']) # Converting by using ffmpeg
+    os.remove(whole_file)
+    return file_name + '.mp4'
 
-# Converting downloaded file to mp3
+
+# Converting downloaded audio to mp3
 def convert_to_mp3(file_name, file_extension):
     whole_file = file_name + file_extension
     file_path = os.path.abspath(whole_file) # Setting a path of file
