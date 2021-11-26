@@ -11,13 +11,6 @@ logging.basicConfig(filename="sample.log", format='%(asctime)s - %(name)s - %(le
 usr_lnk = ''
 
 
-# Check if text is 'Привет' or 'привет'     
-@bot.message_handler(text=['Привет', 'привет'])
-def text_hello(message):
-    bot.send_message(message.chat.id,
-        "Привет. Я бот телеграмма для прослушивания аудиозаписи и просмотра видео")
-
-
 # Check if command is 'help'
 @bot.message_handler(commands=['help'])
 def cmd_help(message):
@@ -34,7 +27,7 @@ def cmd_start(message):
 
 
 # Check if message starts with "https://www.youtube.com/"      
-@bot.message_handler(text_startswith="https://www.youtube.com/")
+@bot.message_handler(text_startswith="https://")
 def download_music(message):
     global dl_per, usr_lnk
     if dl_per == 0: return
@@ -65,13 +58,12 @@ def call_answer(call):
                 audio_name = convert_to_mp3(video.title, '.' + best_audio.extension)
             else:
                 audio_name = video.title + '.' + best_audio.extension
-            th = open(thumbnail_get(video.bigthumb), 'rb')
+            th = thumbnail_get(video.bigthumb)
             c = f"<a href='https://song.link/y/{video.videoid}'><i>song.link</i></a>"
             # Sending audio
-            bot.send_audio(call.message.chat.id, open(audio_name, 'rb'), thumb=th, caption=c, parse_mode='html')
-            th.close()
+            bot.send_audio(call.message.chat.id, open(audio_name, 'rb'), thumb=open(th, 'rb'), caption=c, parse_mode='html')
             os.remove(audio_name)
-            os.remove('thumb.jpg')
+            os.remove(th)
         elif call.data == "video":
             video = pafy.new(usr_lnk)
             # Letting Telegram understand that button event is handled
@@ -95,6 +87,12 @@ def get_text_messages(message):
     # Verifying a link
     if dl_per == 1 and not message.text.startswith("https://www.youtube.com/watch?v="):
         return bot.send_message(message.chat.id, "Got incorrect link, please write a valid link")
+    # Handling greetings
+    for h in ['Привет ', 'Привет', 'привет', 'привет ', '/start']:
+        if message.text.startswith(h):
+            bot.send_message(message.chat.id,
+            "Привет. Я бот телеграмма для прослушивания аудиозаписи и просмотра видео")
+            break
 
 
 # Checking best video
