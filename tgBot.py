@@ -1,4 +1,5 @@
-import telebot, pafy, os, subprocess, logging
+from urllib import parse
+import telebot, pafy, os, subprocess, logging, requests
 from config import tg_api_key
 from telebot import custom_filters
 from telebot import types
@@ -22,7 +23,7 @@ def text_hello(message):
 @bot.message_handler(commands=['help'])
 def cmd_help(message):
     bot.send_message(message.chat.id,
-        "Чтоб поздароваться с ботом напишите <Привет> <привет>. Чтоб запустить меня напишите команду </начать>")
+        "Чтоб поздароваться с ботом, напишите /Привет или /привет. Чтоб запустить меня, напишите команду /s")
 
 
 # Check if command is 'начать'
@@ -39,6 +40,7 @@ def download_music(message):
     global dl_per, usr_lnk
     if dl_per == 0: return
     usr_lnk = message.text
+    # Creating inline buttons
     markup_inline = types.InlineKeyboardMarkup()
     item_audio = types.InlineKeyboardButton(text='Audio', callback_data='audio')
     item_video = types.InlineKeyboardButton(text='Video', callback_data='video')
@@ -64,17 +66,23 @@ def call_answer(call):
                 audio_name = convert_to_mp3(video.title, '.' + best_audio.extension)
             else:
                 audio_name = video.title + '.' + best_audio.extension
-            bot.send_audio(call.message.chat.id, open(audio_name, 'rb'))
+            th = open(thumbnail_get(video.bigthumb), 'rb')
+            c = f"<a href='https://song.link/y/{video.videoid}'><i>song.link</i></a>"
+            # Sending audio
+            bot.send_audio(call.message.chat.id, open(audio_name, 'rb'), thumb=th, caption=c, parse_mode='html')
+            th.close()
             os.remove(audio_name)
+            os.remove('thumb.jpg')
         elif call.data == "video":
             video = pafy.new(usr_lnk)
             # Letting Telegram understand that button event is handled
             bot.answer_callback_query(callback_query_id=call.id)
             best_video, best_audio = find_best_vid(video)
             bot.send_message(call.message.chat.id, "Downloading the video ({})".format(best_video.resolution))
+            bot.send_message(call.message.chat.id, "Merging...")
             video_name = merge(best_video, best_audio)
             bot.send_message(call.message.chat.id, "Uploading the video...")
-            bot.send_video(call.message.chat.id, open(video_name, 'rb'))
+            bot.send_video(call.message.chat.id, open(video_name, 'rb'), thumb=open(thumbnail_get(video.thumb), 'rb'))
             os.remove(video_name)
         dl_per = 0
     except ValueError:
@@ -95,7 +103,6 @@ def find_best_vid(video):
     for v in video.videostreams:
         best_video = v
         if int(str(v)[str(v).index('x') + 1:]) >= 1080: break
-
     best_audio = video.getbestaudio()
     return best_video, best_audio
 
@@ -139,6 +146,14 @@ def convert_to_mp3(file_name, file_extension):
         ['ffmpeg', '-i', file_path, '-hide_banner', file_path[:file_path.index('.')] + '.mp3'])
     os.remove(whole_file)
     return file_name + '.mp3'
+
+
+# Getting a thumbnail
+def thumbnail_get(url_thumb):
+    r =  requests.get(url_thumb).content
+    with open('thumb.jpg', 'wb') as thumb:
+        thumb.write(r)
+    return 'thumb.jpg'
 
 
 bot.polling()
