@@ -11,10 +11,9 @@ logging.basicConfig(filename="sample.log", format='%(asctime)s - %(name)s - %(le
 usr_lnk = ''
 
 
-@bot.message_handler(text_startswith=['top'])
+@bot.message_handler(text_startswith='/top')
 def cmd_help(message):
-    bot.send_message(message.chat.id,
-         "1")
+    bot.send_message(message.chat.id, "1")
 
 
 # Check if command is 'help'
