@@ -11,6 +11,12 @@ logging.basicConfig(filename="sample.log", format='%(asctime)s - %(name)s - %(le
 usr_lnk = ''
 
 
+@bot.message_handler(text_startswith=['top'])
+def cmd_help(message):
+    bot.send_message(message.chat.id,
+         "1")
+
+
 # Check if command is 'help'
 @bot.message_handler(commands=['help'])
 def cmd_help(message):
@@ -69,7 +75,7 @@ def call_answer(call):
             # Letting Telegram understand that button event is handled
             bot.answer_callback_query(callback_query_id=call.id)
             best_video, best_audio = find_best_vid(video)
-            bot.send_message(call.message.chat.id, "Downloading the video ({})".format(best_video.resolution))
+            bot.send_message(call.message.chat.id, f"Downloading the video ({best_video.resolution})")
             bot.send_message(call.message.chat.id, "Merging...")
             video_name = merge(best_video, best_audio)
             bot.send_message(call.message.chat.id, "Uploading the video...")
