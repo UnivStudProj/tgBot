@@ -94,7 +94,7 @@ def get_text_messages(message):
 def find_best_vid(video):
     for v in video.videostreams:
         best_video = v
-        if int(str(v)[str(v).index('x') + 1:]) >= 720: break
+        if int(str(v)[str(v).index('x') + 1:]) >= 1080: break
 
     best_audio = video.getbestaudio()
     return best_video, best_audio
