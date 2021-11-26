@@ -22,7 +22,7 @@ def text_hello(message):
 @bot.message_handler(commands=['help'])
 def cmd_help(message):
     bot.send_message(message.chat.id,
-        "Чтоб поздароваться с ботом, напишите /Привет или /привет. Чтоб запустить меня, напишите команду /s")
+        "Чтоб поздароваться с ботом, напишите 'Привет' или 'привет'. Чтоб запустить меня, напишите команду /s")
 
 
 # Check if command is 'начать'
