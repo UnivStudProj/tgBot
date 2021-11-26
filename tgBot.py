@@ -1,4 +1,3 @@
-from urllib import parse
 import telebot, pafy, os, subprocess, logging, requests
 from config import tg_api_key
 from telebot import custom_filters
