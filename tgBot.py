@@ -31,80 +31,76 @@ def cmd_start(message):
     dl_per = 1
 
 
-# Check if message starts with "https://www.youtube.com/"      
-@bot.message_handler(text_startswith="https://")
-def download_music(message):
-    global dl_per, usr_lnk
-    if dl_per == 0: return
-    usr_lnk = message.text
-    # Creating inline buttons
-    markup_inline = types.InlineKeyboardMarkup()
-    item_audio = types.InlineKeyboardButton(text='Audio', callback_data='audio')
-    item_video = types.InlineKeyboardButton(text='Video', callback_data='video')
-    markup_inline.add(item_audio, item_video)
-    bot.send_message(message.chat.id, "What to download?", reply_markup=markup_inline)
-
-
 # Receiving callback
 @bot.callback_query_handler(func=lambda call: True)
 def call_answer(call):
     global dl_per, usr_lnk
-    try:
-        if call.data == 'audio':
-            video = pafy.new(usr_lnk)
-            audio_type = mp3_availability(video.audiostreams)
-            best_audio = video.getbestaudio(preftype=audio_type)
-            # Letting Telegram understand that button event is handled
-            bot.answer_callback_query(callback_query_id=call.id)
-            bot.send_message(call.message.chat.id, "Downloading best audio from the video...")
-            best_audio.download()
-            if audio_type == 'any':
-                bot.send_message(call.message.chat.id, "Converting the audio...")
-                audio_name = convert_to_mp3(video.title, '.' + best_audio.extension)
-            else:
-                audio_name = video.title + '.' + best_audio.extension
-            th = thumbnail_get(video.bigthumb)
-            c = f"<a href='https://song.link/y/{video.videoid}'><i>song.link</i></a>"
-            # Sending audio
-            bot.send_audio(call.message.chat.id, open(audio_name, 'rb'), thumb=open(th, 'rb'), caption=c, parse_mode='html')
-            os.remove(audio_name)
-            os.remove(th)
-        elif call.data == "video":
-            video = pafy.new(usr_lnk)
-            # Letting Telegram understand that button event is handled
-            bot.answer_callback_query(callback_query_id=call.id)
-            best_video, best_audio = find_best_vid(video)
-            bot.send_message(call.message.chat.id, f"Downloading the video ({best_video.resolution})")
-            bot.send_message(call.message.chat.id, "Merging...")
-            video_name = merge(best_video, best_audio)
-            bot.send_message(call.message.chat.id, "Uploading the video...")
-            bot.send_video(call.message.chat.id, open(video_name, 'rb'), thumb=open(thumbnail_get(video.thumb), 'rb'))
-            os.remove(video_name)
-        dl_per = 0
-    except ValueError:
-        bot.send_message(call.message.chat.id, "Need 11 character video id or the URL of the video.")
+    video = pafy.new(usr_lnk)
+    if call.data == 'audio':
+        audio_type = mp3_availability(video.audiostreams)
+        best_audio = video.getbestaudio(preftype=audio_type)
+        # Letting Telegram understand that button event is handled
+        bot.answer_callback_query(callback_query_id=call.id)
+        bot.send_message(call.message.chat.id, "Downloading best audio from the video...")
+        best_audio.download()
+        if audio_type == 'any':
+            bot.send_message(call.message.chat.id, "Converting the audio...")
+            audio_name = convert_to_mp3(video.title, '.' + best_audio.extension)
+        else:
+            audio_name = video.title + '.' + best_audio.extension
+        th = thumbnail_get(video.bigthumb)
+        c = f"<a href='https://song.link/y/{video.videoid}'><i>song.link</i></a>"
+        # Sending audio
+        bot.send_audio(call.message.chat.id, open(audio_name, 'rb'), thumb=open(th, 'rb'), caption=c, parse_mode='html')
+        os.remove(audio_name)
+        os.remove(th)
+    elif call.data == "video":
+        # Letting Telegram understand that button event is handled
+        bot.answer_callback_query(callback_query_id=call.id)
+        best_video, best_audio = find_best_vid(video)
+        bot.send_message(call.message.chat.id, f"Downloading the video ({best_video.resolution})")
+        bot.send_message(call.message.chat.id, "Merging...")
+        video_name = merge(best_video, best_audio)
+        # Sending video
+        bot.send_message(call.message.chat.id, "Uploading the video...")
+        bot.send_video(call.message.chat.id, open(video_name, 'rb'), thumb=open(thumbnail_get(video.thumb), 'rb'))
+        os.remove(video_name)
+    dl_per = 0
 
 
 # Handling text messages
 @bot.message_handler(content_types=['text'])
 def get_text_messages(message):
-    global dl_per
-    # Verifying a link
-    if dl_per == 1 and not message.text.startswith("https://www.youtube.com/watch?v="):
-        return bot.send_message(message.chat.id, "Got incorrect link, please write a valid link")
+    global dl_per, usr_lnk
     # Handling greetings
     for h in ['Привет ', 'Привет', 'привет', 'привет ', '/start']:
         if message.text.startswith(h):
             bot.send_message(message.chat.id,
             "Привет. Я бот телеграмма для прослушивания аудиозаписи и просмотра видео")
             break
+    if dl_per == 0: 
+        return
+    else:
+        usr_lnk = message.text
+        # Verifying link
+        try:
+            pafy.new(usr_lnk)
+        except ValueError:
+            return bot.send_message(message.chat.id, "Need 11 character video id or the URL of the video.")
+        # Creating inline buttons
+        markup_inline = types.InlineKeyboardMarkup()
+        item_audio = types.InlineKeyboardButton(text='Audio', callback_data='audio')
+        item_video = types.InlineKeyboardButton(text='Video', callback_data='video')
+        markup_inline.add(item_audio, item_video)
+        bot.send_message(message.chat.id, "What to download?", reply_markup=markup_inline)
 
 
 # Checking best video
 def find_best_vid(video):
     for v in video.videostreams:
+        if int(str(v)[str(v).index('x') + 1:]) > 1080: 
+            break
         best_video = v
-        if int(str(v)[str(v).index('x') + 1:]) >= 1080: break
     best_audio = video.getbestaudio()
     return best_video, best_audio
 
@@ -135,7 +131,8 @@ def merge(best_video, best_audio):
 # Checking if there mp3
 def mp3_availability(audiostreams):
     for a in audiostreams:
-        if a.extension == 'mp3': return a.extension
+        if a.extension == 'mp3': 
+            return a.extension
     return 'any'
 
 
