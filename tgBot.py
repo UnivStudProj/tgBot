@@ -1,5 +1,5 @@
-import telebot, pafy, os, subprocess, logging, requests
-from config import tg_api_key
+import telebot, pafy, os, subprocess, logging, requests, psycopg2
+from config import tg_api_key, host, user, password, db_name
 from telebot import custom_filters
 from telebot import types
 
@@ -11,9 +11,49 @@ logging.basicConfig(filename="sample.log", format='%(asctime)s - %(name)s - %(le
 usr_lnk = ''
 
 
+# Database query
 @bot.message_handler(text_startswith='/top')
-def cmd_help(message):
-    bot.send_message(message.chat.id, "1")
+def cmd_help(message):    
+    try:
+        connection = psycopg2.connect(
+        host = host,
+        user = user,
+        password = password,
+        database = db_name
+        )
+        
+        if len(message.text) >= 5:
+            with connection.cursor() as cursor:
+                
+                
+                cursor.execute(
+                f"""SELECT * FROM tracks WHERE track_pos_number = {message.text[4:]};"""
+                )
+                row = cursor.fetchone()
+                num = str(row[0]) + '. '
+                artist = row[1]
+                name = row[2]
+                img = row[3]
+                whole_track = num + artist + name
+                logging.info(num)
+                logging.info(whole_track)
+                logging.info(img)
+                
+                
+                
+                # TODO: send message with image
+                
+                
+                
+                bot.send_message(message.chat.id, text=f"<a href='{img}'>{whole_track}</a>", parse_mode='html', disable_web_page_preview=False)
+                                
+
+    except Exception as _ex:
+        print("[INFO] Error while working with PosgreSQL:", _ex)
+    finally:
+        if connection:
+            connection.close()
+            print("[INFO] PostgreSQL connection closed")
 
 
 # Check if command is 'help'
