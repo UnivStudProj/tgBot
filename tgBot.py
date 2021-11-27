@@ -21,11 +21,8 @@ def cmd_help(message):
         password = password,
         database = db_name
         )
-        
         if len(message.text) >= 5:
             with connection.cursor() as cursor:
-                
-                
                 cursor.execute(
                 f"""SELECT * FROM tracks WHERE track_pos_number = {message.text[4:]};"""
                 )
