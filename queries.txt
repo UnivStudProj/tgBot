@@ -1,0 +1,61 @@
+    # ==================================================
+    # Create the table
+    # 
+    # with connection.cursor() as cursor:
+    #     cursor.execute(
+    #         """CREATE TABLE Users(
+    #             id serial PRIMARY KEY,
+    #             user_balance varchar(50) NOT NULL);"""
+    #     )
+    # 
+    #     print("[INFO] Table created successfully")
+    # ==================================================
+
+    # ==================================================
+    # Insert data into the table
+    #
+    # with connection.cursor() as cursor:
+    #     cursor.execute(
+    #         """INSERT INTO Users (user_balance) VALUES
+    #         ('333777');"""
+    #     )
+    #
+    #     print("[INFO] Data was succesfully inserted")
+    # ==================================================
+
+    # ==================================================
+    # Delete the table
+    #
+    # with connection.cursor() as cursor:
+    #     cursor.execute(
+    #         """DROP TABLE Users;"""
+    #     )
+    #     print("[INFO] Table was deleted")
+    # ==================================================
+
+    # ==================================================
+    # Getting data from the table
+    # with connection.cursor() as cursor:
+    #    cursor.execute(
+    #        """SELECT user_balance FROM Users WHERE id = '1';"""
+    #    )
+    #    print(cursor.fetchone())
+    # ==================================================
+
+    # connection.autocommit = True
+
+========= INSERTING ===========
+
+    connection.autocommit = True
+            
+    with open('top100.json') as f:
+        data = json.load(f)
+
+    for track in data:
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    f"""INSERT INTO tracks (track_pos_number, track_artist, track_name) VALUES
+                    ({track}, '{data[track]['artist']}', '{data[track]['title']}');"""
+                )
+                
+===============================

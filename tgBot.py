@@ -13,40 +13,46 @@ usr_lnk = ''
 
 # Database query
 @bot.message_handler(text_startswith='/top')
-def cmd_help(message):    
+def cmd_help(message):
+    # Connecting to pgAdmin    
     try:
         connection = psycopg2.connect(
         host = host,
         user = user,
         password = password,
         database = db_name
-        )
+        )     
+        # Sending one song according to the position number
         if len(message.text) >= 5:
             with connection.cursor() as cursor:
                 cursor.execute(
-                f"""SELECT * FROM tracks WHERE track_pos_number = {message.text[4:]};"""
+                    f"""SELECT * FROM tracks WHERE track_pos_number = {message.text[4:]};"""
                 )
                 row = cursor.fetchone()
                 num = str(row[0]) + '. '
-                artist = row[1]
+                artist = row[1] + ' - '
                 name = row[2]
-                img = row[3]
-                whole_track = num + artist + name
-                logging.info(num)
-                logging.info(whole_track)
-                logging.info(img)
-                
-                
-                
-                # TODO: send message with image
-                
-                
-                
-                bot.send_message(message.chat.id, text=f"<a href='{img}'>{whole_track}</a>", parse_mode='html', disable_web_page_preview=False)
-                                
-
+                whole_name = num + artist + name       
+                bot.send_message(message.chat.id, whole_name)
+        # Sending all top 100 songs
+        else:
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    f"""SELECT * FROM tracks;"""
+                )
+                song_l = ''
+                # For each track
+                for _ in range(1, 101):
+                    row = cursor.fetchone()
+                    pos = str(row[0]) + '. '
+                    artist = row[1] + ' - '
+                    name = row[2]
+                    song_l += pos + artist + name + '\n'
+                bot.send_message(message.chat.id, song_l)
+    # Printing errors                              
     except Exception as _ex:
         print("[INFO] Error while working with PosgreSQL:", _ex)
+    # Closing connection
     finally:
         if connection:
             connection.close()
@@ -96,12 +102,15 @@ def call_answer(call):
         bot.answer_callback_query(callback_query_id=call.id)
         best_video, best_audio = find_best_vid(video)
         bot.send_message(call.message.chat.id, f"Downloading the video ({best_video.resolution})")
+        best_video.download()
         bot.send_message(call.message.chat.id, "Merging...")
         video_name = merge(best_video, best_audio)
         # Sending video
         bot.send_message(call.message.chat.id, "Uploading the video...")
-        bot.send_video(call.message.chat.id, open(video_name, 'rb'), thumb=open(thumbnail_get(video.thumb), 'rb'))
+        th = thumbnail_get(video.thumb)
+        bot.send_video(call.message.chat.id, open(video_name, 'rb'), thumb=open(th, 'rb'))
         os.remove(video_name)
+        os.remove(th)
     dl_per = 0
 
 
@@ -145,7 +154,6 @@ def find_best_vid(video):
 # Merging video- and audiostreams
 def merge(best_video, best_audio):
     # Videostream file
-    best_video.download()
     v_ttl = best_video.title + '_v'
     v_ext = '.' + best_video.extension
     os.rename(best_video.title + v_ext, v_ttl + v_ext)
@@ -159,6 +167,7 @@ def merge(best_video, best_audio):
     # Converting by using ffmpeg
     subprocess.call(
         ['ffmpeg', '-i', vid_path, '-hide_banner', '-i', aud_path, '-c:v', 'copy', '-c:a', 'aac', vid_path[:vid_path.index('.')] + '_n' + '.mp4'])
+    # Deleting downloaced files
     os.remove(vid)
     os.remove(aud)
     os.rename(v_ttl + '_n' + '.mp4', best_video.title + '.mp4')
