@@ -130,9 +130,9 @@ def get_text_messages(message):
         usr_lnk = message.text
         # Verifying link
         try:
-            pafy.new(usr_lnk)
+            _ = pafy.new(usr_lnk)
         except ValueError:
-            return bot.send_message(message.chat.id, "Need 11 character video id or the URL of the video.")
+            return bot.send_message(message.chat.id, "Got wrong link.")
         # Creating inline buttons
         markup_inline = types.InlineKeyboardMarkup()
         item_audio = types.InlineKeyboardButton(text='Audio', callback_data='audio')
