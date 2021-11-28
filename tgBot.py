@@ -17,10 +17,10 @@ def cmd_help(message):
     # Connecting to pgAdmin    
     try:
         connection = psycopg2.connect(
-        host = host,
-        user = user,
-        password = password,
-        database = db_name
+            host = host,
+            user = user,
+            password = password,
+            database = db_name
         )     
         # Sending one song according to the position number
         if len(message.text) >= 5:
