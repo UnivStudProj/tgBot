@@ -37,9 +37,7 @@ def cmd_help(message):
         # Sending all top 100 songs
         else:
             with connection.cursor() as cursor:
-                cursor.execute(
-                    f"""SELECT * FROM tracks;"""
-                )
+                cursor.execute("""SELECT * FROM tracks;""")
                 song_l = ''
                 # For each track
                 for _ in range(1, 101):
