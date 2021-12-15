@@ -142,7 +142,7 @@ def get_text_messages(message):
 # Checking best video
 def find_best_vid(video):
     for v in video.videostreams:
-        if int(str(v)[str(v).index('x') + 1:]) > 1080: 
+        if int(str(v)[str(v).index('x') + 1:]) > 720: 
             break
         best_video = v
     best_audio = video.getbestaudio()
@@ -163,8 +163,9 @@ def merge(best_video, best_audio):
     aud = best_audio.title + '_a' + v_ext
     aud_path = os.path.abspath(aud)
     # Converting by using ffmpeg
+    logging.info(v_ttl)
     subprocess.call(
-        ['ffmpeg', '-i', vid_path, '-hide_banner', '-i', aud_path, '-c:v', 'copy', '-c:a', 'aac', vid_path[:vid_path.index('.')] + '_n' + '.mp4'])
+        ['ffmpeg', '-i', vid_path, '-hide_banner', '-i', aud_path, '-c:v', 'copy', '-c:a', 'aac', vid_path[:vid_path.index('_v') + 2] + '_n' + '.mp4'])
     # Deleting downloaced files
     os.remove(vid)
     os.remove(aud)
