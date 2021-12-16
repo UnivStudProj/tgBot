@@ -6,7 +6,7 @@ from telebot import types
 bot = telebot.TeleBot(tg_api_key)
 bot.add_custom_filter(custom_filters.TextStartsFilter())
 bot.add_custom_filter(custom_filters.TextMatchFilter())
-logging.basicConfig(filename="./temp/sample.log", format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
+logging.basicConfig(filename="./old/sample.log", format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
 usr_lnk = ''
 dl_per = False  # flag for download permission
@@ -178,8 +178,21 @@ def merge(best_audio, file_path):
     aud_abs_path = os.path.abspath(aud)
     # Converting by using ffmpeg
     subprocess.call(
-        ['ffmpeg', '-i', vid_abs_path, '-hide_banner', '-i', aud_abs_path, '-c:v', 'copy', '-c:a', 'aac', vid_abs_path[:vid_abs_path.index('.')] + '_n.mp4'])
+        [                       # FIXME: Process below is too slow
+            'ffmpeg', '-hide_banner', \
+            '-i', vid_abs_path, '-an', '-c:v', 'libx264', '-crf', '26', '-vf', 'scale=640:-1', './temp_vid/t_out.mp4'
+        ]   
+    )
+    subprocess.call(
+        [
+            'ffmpeg', '-hide_banner', \
+            '-i', './temp_vid/t_out.mp4', \
+            '-i', aud_abs_path, '-c:v', 'copy', '-c:a', 'aac', \
+            vid_abs_path[:vid_abs_path.index('.')] + '_n.mp4'
+        ]
+    )
     # Deleting downloaded files
+    os.remove('./temp_vid/t_out.mp4')
     os.remove(vid)
     os.remove(aud)
     return './temp_vid/t_vid_n.mp4'
