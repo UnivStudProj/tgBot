@@ -8,5 +8,4 @@ __pycache__/
 .top100_parser.py.swp
 tgBot.spec
 top100_parser.py~
-temp/
 .vscode/

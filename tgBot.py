@@ -51,7 +51,7 @@ def cmd_help(message):
                 bot.send_message(message.chat.id, song_l)
     # Printing errors                              
     except Exception as _ex:
-        print("[INFO] Error while working with PosgreSQL:", _ex)
+        print("[INFO] Error while working with PostgreSQL:", _ex)
     # Closing connection
     finally:
         if connection:
@@ -100,13 +100,14 @@ def call_answer(call):
         th = thumbnail_get(video.getbestthumb())
         c = f"<a href='https://song.link/y/{video.videoid}'><i>song.link</i></a>"
         # Sending audio
+        bot.send_message(call.message.chat.id, "Uploading the track...")
         bot.send_audio(call.message.chat.id, open(audio_name, 'rb'), thumb=open(th, 'rb'), title=best_audio.title, caption=c, parse_mode='html')
         os.remove(audio_name)
     elif call.data == "video":
         # Letting Telegram understand that button event is handled
         bot.answer_callback_query(callback_query_id=call.id)
         best_video, best_audio = find_best_vid(video)
-        th = thumbnail_get(video.getbestthumb())
+        th = thumbnail_get(video.bigthumb)
         bot.send_message(call.message.chat.id, f"Downloading the video ({best_video.resolution})")
         fp = f'./temp_vid/t_vid.{best_video.extension}'
         best_video.download(filepath=fp)
@@ -117,9 +118,9 @@ def call_answer(call):
             video_name = merge(best_audio, fp)
         # Sending video
         bot.send_message(call.message.chat.id, "Uploading the video...")
-        bot.send_video(call.message.chat.id, open(video_name, 'rb'), thumb=open(th, 'rb'), caption=best_video.title)
+        bot.send_video(call.message.chat.id, open(video_name, 'rb'), thumb=open(th, 'rb'), caption=best_video.title, timeout=180)
         os.remove(video_name)
-    # os.remove(th)
+    os.remove(th)
     isNormalStream = False
     dl_per = False
 
@@ -156,7 +157,7 @@ def find_best_vid(video):
     global isNormalStream
     # Iterating over videpstreams
     for v in video.videostreams:
-        if int(str(v)[str(v).index('x') + 1:]) > 720: 
+        if eval(v.quality.replace('x', '*')) > 921600:
             break
         best_video = v
     best_audio = video.getbestaudio()
