@@ -6,9 +6,11 @@ from telebot import types
 bot = telebot.TeleBot(tg_api_key)
 bot.add_custom_filter(custom_filters.TextStartsFilter())
 bot.add_custom_filter(custom_filters.TextMatchFilter())
-dl_per = 0  # flag for download permission
-logging.basicConfig(filename="sample.log", format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
+logging.basicConfig(filename="./temp/sample.log", format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
+
 usr_lnk = ''
+dl_per = False  # flag for download permission
+isNormalStream = False
 
 
 # Database query
@@ -69,13 +71,13 @@ def cmd_help(message):
 def cmd_start(message):
     global dl_per
     bot.send_message(message.chat.id, "Я в ожидание вашей ссылки из ютуба")
-    dl_per = 1
+    dl_per = True
 
 
 # Receiving callback
 @bot.callback_query_handler(func=lambda call: True)
 def call_answer(call):
-    global dl_per, usr_lnk
+    global dl_per, usr_lnk, isNormalStream
     video = pafy.new(usr_lnk)
     if call.data == 'audio':
         audio_type = mp3_availability(video.audiostreams)
@@ -83,33 +85,43 @@ def call_answer(call):
         # Letting Telegram understand that button event is handled
         bot.answer_callback_query(callback_query_id=call.id)
         bot.send_message(call.message.chat.id, "Downloading best audio from the video...")
-        best_audio.download()
+        # Stopping if no audiostreams
+        if isNormalStream:
+            bot.send_message(call.message.chat.id, "Unfortunaly, there is no audio to download...")
+            isNormalStream = False
+            return
+        fp = f'./temp_aud/t_aud.{best_audio.extension}'
+        best_audio.download(filepath=fp)
         if audio_type == 'any':
             bot.send_message(call.message.chat.id, "Converting the audio...")
-            audio_name = convert_to_mp3(video.title, '.' + best_audio.extension)
+            audio_name = convert_to_mp3(fp)
         else:
-            audio_name = video.title + '.' + best_audio.extension
-        th = thumbnail_get(video.bigthumb)
+            audio_name = fp
+        th = thumbnail_get(video.getbestthumb())
         c = f"<a href='https://song.link/y/{video.videoid}'><i>song.link</i></a>"
         # Sending audio
-        bot.send_audio(call.message.chat.id, open(audio_name, 'rb'), thumb=open(th, 'rb'), caption=c, parse_mode='html')
+        bot.send_audio(call.message.chat.id, open(audio_name, 'rb'), thumb=open(th, 'rb'), title=best_audio.title, caption=c, parse_mode='html')
         os.remove(audio_name)
-        os.remove(th)
     elif call.data == "video":
         # Letting Telegram understand that button event is handled
         bot.answer_callback_query(callback_query_id=call.id)
         best_video, best_audio = find_best_vid(video)
+        th = thumbnail_get(video.getbestthumb())
         bot.send_message(call.message.chat.id, f"Downloading the video ({best_video.resolution})")
-        best_video.download()
-        bot.send_message(call.message.chat.id, "Merging...")
-        video_name = merge(best_video, best_audio)
+        fp = f'./temp_vid/t_vid.{best_video.extension}'
+        best_video.download(filepath=fp)
+        video_name = os.path.abspath(fp)
+        # If the video has only normal stream
+        if not isNormalStream:
+            bot.send_message(call.message.chat.id, "Merging...")
+            video_name = merge(best_audio, fp)
         # Sending video
         bot.send_message(call.message.chat.id, "Uploading the video...")
-        th = thumbnail_get(video.thumb)
-        bot.send_video(call.message.chat.id, open(video_name, 'rb'), thumb=open(th, 'rb'))
+        bot.send_video(call.message.chat.id, open(video_name, 'rb'), thumb=open(th, 'rb'), caption=best_video.title)
         os.remove(video_name)
-        os.remove(th)
-    dl_per = 0
+    # os.remove(th)
+    isNormalStream = False
+    dl_per = False
 
 
 # Handling text messages
@@ -122,13 +134,13 @@ def get_text_messages(message):
             bot.send_message(message.chat.id,
             "Привет. Я бот телеграмма для прослушивания аудиозаписи и просмотра видео")
             break
-    if dl_per == 0: 
+    if not dl_per: 
         return
     else:
         usr_lnk = message.text
         # Verifying link
         try:
-            _ = pafy.new(usr_lnk)
+            tmp = pafy.new(usr_lnk)
         except ValueError:
             return bot.send_message(message.chat.id, "Got wrong link.")
         # Creating inline buttons
@@ -141,40 +153,44 @@ def get_text_messages(message):
 
 # Checking best video
 def find_best_vid(video):
+    global isNormalStream
+    # Iterating over videpstreams
     for v in video.videostreams:
         if int(str(v)[str(v).index('x') + 1:]) > 720: 
             break
         best_video = v
     best_audio = video.getbestaudio()
+    if not video.videostreams:
+        best_video = video.getbest()
+        isNormalStream = True
     return best_video, best_audio
 
 
 # Merging video- and audiostreams
-def merge(best_video, best_audio):
+def merge(best_audio, file_path):
     # Videostream file
-    v_ttl = best_video.title + '_v'
-    v_ext = '.' + best_video.extension
-    os.rename(best_video.title + v_ext, v_ttl + v_ext)
-    vid = v_ttl + v_ext
-    vid_path = os.path.abspath(vid)
+    vid = file_path
+    vid_abs_path = os.path.abspath(vid)
     # Audiostream file
-    best_audio.download()
-    os.rename(best_audio.title + '.' + best_audio.extension, best_audio.title + '_a' + v_ext)
-    aud = best_audio.title + '_a' + v_ext
-    aud_path = os.path.abspath(aud)
+    aud = f'./temp_aud/t_aud.{best_audio.extension}' 
+    best_audio.download(filepath=aud)
+    aud_abs_path = os.path.abspath(aud)
     # Converting by using ffmpeg
-    logging.info(v_ttl)
     subprocess.call(
-        ['ffmpeg', '-i', vid_path, '-hide_banner', '-i', aud_path, '-c:v', 'copy', '-c:a', 'aac', vid_path[:vid_path.index('_v') + 2] + '_n' + '.mp4'])
-    # Deleting downloaced files
+        ['ffmpeg', '-i', vid_abs_path, '-hide_banner', '-i', aud_abs_path, '-c:v', 'copy', '-c:a', 'aac', vid_abs_path[:vid_abs_path.index('.')] + '_n.mp4'])
+    # Deleting downloaded files
     os.remove(vid)
     os.remove(aud)
-    os.rename(v_ttl + '_n' + '.mp4', best_video.title + '.mp4')
-    return best_video.title + '.mp4'
+    return './temp_vid/t_vid_n.mp4'
 
 
 # Checking if there mp3
 def mp3_availability(audiostreams):
+    global isNormalStream
+    if not audiostreams:
+        isNormalStream = True
+        return
+    # Iterating over audiostreams
     for a in audiostreams:
         if a.extension == 'mp3': 
             return a.extension
@@ -182,14 +198,13 @@ def mp3_availability(audiostreams):
 
 
 # Converting downloaded audio to mp3
-def convert_to_mp3(file_name, file_extension):
-    whole_file = file_name + file_extension
-    file_path = os.path.abspath(whole_file)
+def convert_to_mp3(file_p):
+    file_path = os.path.abspath(file_p)
     # Converting by using ffmpeg
     subprocess.call(
-        ['ffmpeg', '-i', file_path, '-hide_banner', file_path[:file_path.index('.')] + '.mp3'])
-    os.remove(whole_file)
-    return file_name + '.mp3'
+        ['ffmpeg', '-i', file_path, '-hide_banner', file_path[:file_path.index('.')] + '_n.mp3'])
+    os.remove(file_p)
+    return './temp_aud/t_aud_n.mp3'
 
 
 # Getting a thumbnail
