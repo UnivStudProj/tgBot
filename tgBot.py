@@ -119,7 +119,7 @@ def call_answer(call):
             video_name = merge(best_audio, fp)
         # Отправляет видео
         bot.send_message(call.message.chat.id, "Выгружаю видео...")
-        bot.send_video(call.message.chat.id, open(video_name, 'rb'), thumb=open(th, 'rb'), caption=best_video.title, timeout=180)
+        bot.send_video(call.message.chat.id, open(video_name, 'rb'), thumb=open(th, 'rb'), caption=best_video.title)
         os.remove(video_name)
     os.remove(th)
     isNormalStream = False
@@ -183,8 +183,8 @@ def merge(best_audio, file_path):
     subprocess.call(
         [
             'ffmpeg', '-hide_banner',
-            '-i', vid_abs_path,
-            '-i', aud_abs_path, '-c:v', 'libx264', '-crf', '27', '-preset', 'veryfast', '-c:a', 'aac',
+            '-i', vid_abs_path, '-i', aud_abs_path, 
+            '-c:v', 'libx264', '-crf', '21', '-preset', 'veryfast', '-c:a', 'aac',
             vid_abs_path[:vid_abs_path.index('.')] + '_n.mp4'
         ]
     )
