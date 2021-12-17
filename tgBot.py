@@ -188,7 +188,6 @@ def merge(best_audio, file_path):
         ]
     )
     # Deleting downloaded files
-    # os.remove('./temp_vid/t_out.mp4')
     os.remove(vid)
     os.remove(aud)
     return './temp_vid/t_vid_n.mp4'
