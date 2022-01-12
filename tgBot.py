@@ -15,7 +15,7 @@ isNormalStream = False
 
 # Создание запросов у датабазы
 @bot.message_handler(text_startswith='/top')
-def cmd_help(message):
+def cmd_top(message):
     # Подключение к дб    
     try:
         connection = psycopg2.connect(
