@@ -9,3 +9,5 @@ __pycache__/
 tgBot.spec
 top100_parser.py~
 .vscode/
+test.py
+cmd.txt

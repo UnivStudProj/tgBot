@@ -1,14 +1,15 @@
 import telebot
-import os
-import subprocess
 import logging
-import pathlib
 import json
-from config import tg_api_key
+import pafy
+from config import API_KEY
 from telebot import custom_filters
 from telebot import types
+from shutil import rmtree
+from subprocess import call as subcall
+from os import mkdir
 
-bot = telebot.TeleBot(tg_api_key)
+bot = telebot.TeleBot(API_KEY)
 bot.add_custom_filter(custom_filters.TextStartsFilter())
 bot.add_custom_filter(custom_filters.TextMatchFilter())
 logging.basicConfig(filename="./old/sample.log", format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
@@ -53,29 +54,42 @@ def call_answer(call):
         # Строка ниже сообщает телеграму, что кнопка была обработана (иначе будет вечное ожидание)
         bot.answer_callback_query(callback_query_id=call.id)
         bot.send_message(call.message.chat.id, "Скачиваю аудиотрек...")
-        audio_path = "/temp_aud/%(creator)s - %(title)s.%(ext)s"
-        subprocess.call(
-            ["yt-dlp", "--compat-options", "no-clean-infojson", "-x", userLink, "-f", "ba", "-o", audio_path]
-        )
 
-        with open("temp_aud/data.info.json") as f:
+        # creating temp folder and downloading audiostream there
+        mkdir("./temp_audio")
+        audio_path = "./temp_audio/%(uploader)s - %(fulltitle)s.%(ext)s"
+        subcall([
+            "yt-dlp", "--write-info-json", "-o", "infojson:/temp_audio/data.%(ext)s",
+            "--write-thumbnail", "--convert-thumbnails", "jpg",
+            "--audio-format", "mp3", "-x", userLink, "-f", "ba", "-o", audio_path
+        ])
+
+        # open metadata file
+        with open("temp_audio/data.info.json") as f:
             data = json.load(f)
+            video_id = data["id"]
             title = data["title"]
             uploader = data["uploader"]
-            thumbnail = f"temp_aud/{title}.opus"
 
+        # setting path for an audio file and a thumbnail
+        audio_file = audio_path % {"uploader": uploader, "fulltitle": title, "ext": "mp3"}
+        thumbnail  = audio_path % {"uploader": uploader, "fulltitle": title, "ext": "jpg"}
         caption = f"""
-            <a href='https://song.link/y/{video.videoid}'>
+            <a href='https://song.link/y/{video_id}'>
                 <i>song.link</i>
             </a>"""
 
         # Отправляет трек
         bot.send_message(call.message.chat.id, "Выгружаю трек...")
-        bot.send_audio(call.message.chat.id, open(audio_path % (title, uploader), 'rb'), 
+        bot.send_audio(call.message.chat.id, open(audio_file, 'rb'), 
                        thumb=open(thumbnail, 'rb'),
-                       title=best_audio.title, 
-                       caption=c, parse_mode='html')
-        os.remove(audio_name)
+                       title=title, 
+                       caption=caption, 
+                       parse_mode='html')
+
+        rmtree("./temp_audio")
+
+    link_enabled = False
         
     
 bot.polling()
