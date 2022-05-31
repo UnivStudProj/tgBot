@@ -6,18 +6,16 @@ import os
 from config import API_KEY
 from telebot import types
 from shutil import rmtree
-from loggerDL import Logger
+from logger import Logger
 
 bot = telebot.TeleBot(API_KEY)
-logging.basicConfig(filename='./old/sample.log', format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
-
-userLink = ''
+input_URL = ''
 link_enabled = False
 
 
 # Обработка команды 'начать'
 @bot.message_handler(commands=['s'])
-def cmd_start(message):
+def command_start(message):
     global link_enabled
     bot.send_message(message.chat.id, 'Я в ожидании вашей ссылки из ютуба')
     link_enabled = True
@@ -26,13 +24,13 @@ def cmd_start(message):
 # Обработка текстовых сообщений
 @bot.message_handler(content_types=['text'])
 def text_url(message):
-    global userLink, link_enabled
+    global input_URL, link_enabled
     if link_enabled: 
-        userLink = message.text
+        input_URL = message.text
         # Проверка правильности ссылки
         try:
             with yt_dlp.YoutubeDL({'simulate': True}) as ydl:
-                ydl.download(userLink)
+                ydl.download(input_URL)
         except Exception:
             return bot.reply_to(message, 'Получена некорректная сслыка...')
 
@@ -43,23 +41,23 @@ def text_url(message):
         markup_inline.add(item_audio, item_video)
         bot.reply_to(message, 'Что скачать?', reply_markup=markup_inline)
 
-        
+
 # Обработка при нажитии на кнопку
 @bot.callback_query_handler(func=lambda call: True)
 def call_answer(call):
-    global userLink, link_enabled
+    global input_URL, link_enabled
     link_enabled = False
 
     # Строка ниже сообщает телеграму, что кнопка была обработана (иначе будет вечное ожидание)
     bot.answer_callback_query(callback_query_id=call.id)
     msg = bot.edit_message_text('Скачиваю...', call.message.chat.id, call.message.message_id)
     download_logger = Logger(bot, msg)
-    os.mkdir('./temp')
 
-    # Создает временную папку, в которую помещаем скачиваемые файлы
+    # Создает временную папку, в которую помещает скачиваемые файлы
+    os.mkdir('./temp')
     temp_path = './temp/%(uploader)s - %(fulltitle)s.%(ext)s'
 
-    # yt-dlp options
+    # Настройки скачивания аудио/видео
     ydl_opts = {
         'writeinfojson'      : True,
         'writethumbnail'     : True,
@@ -85,7 +83,7 @@ def call_answer(call):
 
     # Скачать "аудио/видео"
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        ydl.download(userLink)
+        ydl.download(input_URL)
 
     # Открывает файл с метадатой
     with open('temp/url.info.json', encoding='utf-8') as f:
@@ -122,13 +120,14 @@ def call_answer(call):
                         width=video_width,
                         height=video_height, 
                         caption=title)
-
     except Exception:
         final_message = 'Произошла ошибка при загрузке файла. Возможно, размер файла слишком велик'
+    else:
+        final_message = 'Готово'
 
     temp_file.close()
     thumbnail.close()
-    bot.edit_message_text('Готово' if 'final_message' not in locals() else final_message, call.message.chat.id, call.message.message_id)
+    bot.edit_message_text(final_message, call.message.chat.id, call.message.message_id)
     rmtree('./temp')
         
     

@@ -1,7 +1,7 @@
 class Logger:
 
     def __init__(self, bot, botMessage):
-        self.__msg_info = f'[download]   0.0% of 0.0MiB at 0.0KiB/s ETA 00:00'
+        self.__msg_info = f'0.0% of 0.0MiB at 0.0KiB/s ETA 00:00'
         self.__bot = bot
         self.__botMessage = botMessage
 
@@ -36,4 +36,3 @@ class Logger:
                 self.__botMessage.chat.id,
                 self.__botMessage.message_id
             )
-
