@@ -4,23 +4,15 @@ import json
 import yt_dlp
 import os
 from config import API_KEY
-from telebot import custom_filters, types
+from telebot import types
 from shutil import rmtree
 from loggerDL import Logger
 
 bot = telebot.TeleBot(API_KEY)
-bot.add_custom_filter(custom_filters.TextStartsFilter())
-bot.add_custom_filter(custom_filters.TextMatchFilter())
 logging.basicConfig(filename='./old/sample.log', format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
 userLink = ''
 link_enabled = False
-
-                        #===================================================#
-
-                                # FIXME: text sometimes appearing as a link      
-
-                        #===================================================#
 
 
 # Обработка команды 'начать'
@@ -42,7 +34,7 @@ def text_url(message):
             with yt_dlp.YoutubeDL({'simulate': True}) as ydl:
                 ydl.download(userLink)
         except Exception:
-            return bot.reply_to(message, 'Wrong link...')
+            return bot.reply_to(message, 'Получена некорректная сслыка...')
 
         # Создание кнопок типа "inline"
         markup_inline = types.InlineKeyboardMarkup()
@@ -64,7 +56,7 @@ def call_answer(call):
     download_logger = Logger(bot, msg)
     os.mkdir('./temp')
 
-    # creating temp folder and download audiostream there
+    # Создает временную папку, в которую помещаем скачиваемые файлы
     temp_path = './temp/%(uploader)s - %(fulltitle)s.%(ext)s'
 
     # yt-dlp options
@@ -91,49 +83,53 @@ def call_answer(call):
         }]
     }
 
-    # download file
+    # Скачать "аудио/видео"
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         ydl.download(userLink)
 
-    # open metadata file
+    # Открывает файл с метадатой
     with open('temp/url.info.json', encoding='utf-8') as f:
         data = json.load(f)
         if call.data == 'video':
             video_width  = data['width']
             video_height = data['height']
-        video_id     = data['id']
-        title        = data['title']
+        video_id         = data['id']
+        title            = data['title']
 
-    # get path for an audio file and a thumbnail
+    # Получить имя "аудио/видео" файла
     filename = next(os.walk('temp/'), (None, None, []))[2]
     filename.remove('url.info.json')
     filename = os.path.splitext(filename[0])[0]
-    temp_file = f'./temp/{filename}{".mp3" if call.data == "audio" else ".mp4"}'
-    thumbnail = f'./temp/{filename}.jpg'
-    caption = f"""
-        <a href='https://song.link/y/{video_id}'>
-            <i>song.link</i>
-        </a>"""
+
+    # Отрывает "аудио/видео" и картинку для превью
+    temp_file = open(f'./temp/{filename}{".mp3" if call.data == "audio" else ".mp4"}', 'rb')
+    thumbnail = open(f'./temp/{filename}.jpg', 'rb')
 
     # Отправляет трек
     bot.edit_message_text('Выгружаю...', call.message.chat.id, call.message.message_id)
 
-    if call.data == 'audio':
-        bot.send_audio(call.message.chat.id, open(temp_file, 'rb'), 
-                       thumb=open(thumbnail, 'rb'),
-                       title=title, 
-                       caption=caption, 
-                       parse_mode='html')
-    else:
-        bot.send_video(call.message.chat.id, open(temp_file, 'rb'),
-                       thumb=open(thumbnail, 'rb'),
-                       width=video_width,
-                       height=video_height, 
-                       caption=title)
+    try:
+        if call.data == 'audio':
+            caption = f"""<a href='https://song.link/y/{video_id}'><i>song.link</i></a>"""
+            bot.send_audio(call.message.chat.id, temp_file, 
+                        thumb=thumbnail,
+                        title=title, 
+                        caption=caption, 
+                        parse_mode='html')
+        else:
+            bot.send_video(call.message.chat.id, temp_file,
+                        thumb=thumbnail,
+                        width=video_width,
+                        height=video_height, 
+                        caption=title)
 
-    bot.edit_message_text('Готово', call.message.chat.id, call.message.message_id)
+    except Exception:
+        final_message = 'Произошла ошибка при загрузке файла. Возможно, размер файла слишком велик'
 
+    temp_file.close()
+    thumbnail.close()
+    bot.edit_message_text('Готово' if 'final_message' not in locals() else final_message, call.message.chat.id, call.message.message_id)
     rmtree('./temp')
         
     
-bot.polling(none_stop=True, timeout=123)
+bot.polling(timeout=60)

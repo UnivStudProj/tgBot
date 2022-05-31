@@ -25,7 +25,7 @@ class Logger:
     def downloadHook(self, d):
         if d['status'] == 'downloading':
             self.__bot.edit_message_text(
-                self.__msg_info,
+                self.__msg_info.split('[download]')[1],
                 self.__botMessage.chat.id,
                 self.__botMessage.message_id
             )
