@@ -123,17 +123,17 @@ def call_answer(call):
     temp_file = open(f'./temp/{filename}{byChoice(".mp3", ".mp4")}', 'rb')
     thumbnail = open(f'./temp/{filename}.jpg', 'rb')
 
-    # Отправляет аудио/видео
     bot.edit_message_text('Выгружаю...', call.message.chat.id, call.message.message_id)
     try:
         if call.data == 'audio':
-            caption = f"""<a href='https://song.link/y/{video_id}'><i>song.link</i></a>"""
+            # Отправляет аудиотрек
             bot.send_audio(call.message.chat.id, temp_file,
                         thumb=thumbnail,
                         title=title,
-                        caption=caption,
+                        caption=f"<a href='https://song.link/y/{video_id}'><i>song.link</i></a>",
                         parse_mode='html')
         else:
+            # Отправляет видео
             bot.send_video(call.message.chat.id, temp_file,
                         thumb=thumbnail,
                         width=video_width,

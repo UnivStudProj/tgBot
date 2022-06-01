@@ -7,7 +7,7 @@ class Logger:
         self.__msg_info = f'0.0% of 0.0MiB at 0.0KiB/s ETA 00:00'
 
     def debug(self, msg):
-        # Для совместимости с 'youtube-dl', 'dubug' и 'info' передаются в 'debug'
+        # Для совместимости с 'youtube-dl', 'debug' и 'info' передаются в 'debug'
         # Их можно различить с помощью префикса '[debug] '
         if msg.startswith('[debug] '):
             pass
