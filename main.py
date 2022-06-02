@@ -3,8 +3,9 @@ import json
 import yt_dlp
 import os
 import logging
+import requests
 from config import API_KEY
-from telebot import types, apihelper
+from telebot import types
 from shutil import rmtree
 from logger import Logger
 
@@ -13,7 +14,6 @@ link_enabled = False
 isAudio = False
 
 bot = telebot.TeleBot(API_KEY)
-apihelper.SESSION_TIME_TO_LIVE = 2 * 60
 logging.basicConfig(filename="error.log", format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
 
@@ -38,10 +38,12 @@ def text_url(message):
         input_URL = message.text
         # Проверка правильности ссылки
         try:
-            with yt_dlp.YoutubeDL({'simulate': True}) as ydl:
-                ydl.download(input_URL)
+            r = requests.get(input_URL).text
         except Exception:
             return bot.reply_to(message, 'Получена некорректная сслыка...')
+        else:
+            if '"playabilityStatus":{"status":"ERROR"' in r:
+                return bot.reply_to(message, 'Получена некорректная сслыка...')
 
         # Создание кнопок типа "inline"
         markup_inline = types.InlineKeyboardMarkup()
@@ -97,9 +99,7 @@ def call_answer(call):
         # Скачать "аудио/видео"
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             ydl.download(input_URL)
-    # Обработка ошибки
-    except Exception as e:
-        logging.info(e)
+    except Exception:
         err_message = f'Доступные {byChoice("аудио", "видео")} для скачивания превышают лимит в 50 Мб, попробуйте другое видео'
         rmtree('./temp')
 
@@ -139,7 +139,6 @@ def call_answer(call):
                         width=video_width,
                         height=video_height,
                         caption=title)
-    # Обработка ошибки
     except Exception as e:
         logging.info(e)
         final_message = 'Произошла неизвестая ошибка при загрузке файла.'
@@ -155,4 +154,4 @@ def call_answer(call):
     rmtree('./temp')
 
 
-bot.polling(timeout=60)
+bot.polling(timeout=120)
