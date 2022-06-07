@@ -78,6 +78,7 @@ def call_answer(call):
         'format'             : byChoice('ba[ext=mp3][filesize<50M]/ba[filesize<50M]', 'b[ext=mp4][filesize<50M]/b[filesize<50M]'),
         'logger'             : download_logger,
         'progress_hooks'     : [download_logger.downloadHook],
+        'ffmpeg_location'    : './ffmpeg',
         'outtmpl': { 
             'infojson' : './temp/url.%(ext)s',
             'thumbnail': temp_path,
@@ -141,7 +142,7 @@ def call_answer(call):
                         caption=title)
     except Exception as e:
         logging.info(e)
-        final_message = 'Произошла неизвестая ошибка при загрузке файла.'
+        final_message = 'Произошла неизвестная ошибка при загрузке файла.'
     else:
         final_message = 'Готово'
 
