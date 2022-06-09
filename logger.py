@@ -9,19 +9,8 @@ class Logger:
     def debug(self, msg):
         # Для совместимости с 'youtube-dl', 'debug' и 'info' передаются в 'debug'
         # Их можно различить с помощью префикса '[debug] '
-        if msg.startswith('[debug] '):
-            pass
-        else:
-            self.info(msg)
-
-    def info(self, msg):
-        self.__msg_info = msg
-
-    def warning(self, msg):
-        pass
-
-    def error(self, msg):
-        pass
+        if not msg.startswith('[debug] '):
+            self.__msg_info = msg
 
     def downloadHook(self, d):
         # Не обновляем сообщение, если оно точно такое же, как и предыдущее
